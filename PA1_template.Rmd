@@ -1,8 +1,14 @@
 # Reproducible Research: Peer Assessment 1
 
+´´´{r}
+require(ggplot2)
+´´´
 
 ## Loading and preprocessing the data
-
+´´´{r}
+data<-read.csv('activity.csv)
+data$date<-as.Date(strptime(data$date,"%Y-%m-%d"))
+´´´
 
 
 ## What is mean total number of steps taken per day?

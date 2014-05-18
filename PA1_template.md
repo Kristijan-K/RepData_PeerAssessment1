@@ -9,17 +9,31 @@ require(ggplot2)
 ## Loading required package: ggplot2
 ```
 
+```r
+require(timeDate)
+```
+
+```
+## Loading required package: timeDate
+```
+
 
 ## Loading and preprocessing the data
 
 ```r
 data <- read.csv("activity.csv")
 data$intfact <- as.factor(data$interval)
+data3 <- data
+data3$date <- as.Date(strptime(data3$date, "%Y-%m-%d"))
+data3$weekdays <- isWeekday(data3$date, wday = 1:5)
 ```
 
 
 
 ## What is mean total number of steps taken per day?
+
+### mean:
+
 
 ```r
 y <- aggregate(data$steps, by = list(data$date), FUN = mean)
@@ -41,14 +55,19 @@ y$x
 qplot(Group.1, data = y, weight = x, geom = "histogram", ylab = "mean", xlab = "date")
 ```
 
-![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-31.png) 
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
+
+
+### median:
+
 
 ```r
-y <- aggregate(data$steps, by = list(data$date), FUN = median, na.action = omit.na)
+y <- aggregate(data$steps, by = list(data$date), FUN = median, na.action = na.omit)
 ```
 
 ```
-## Error: object 'omit.na' not found
+## Error: unused argument (na.action = function (object, ...) 
+## UseMethod("na.omit"))
 ```
 
 ```r
@@ -70,10 +89,13 @@ y$x
 qplot(Group.1, data = y, weight = x, geom = "histogram", ylab = "median", xlab = "date")
 ```
 
-![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-32.png) 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
 
 
 ## What is the average daily activity pattern?
+
+### daily activity:
+
 
 ```r
 data2 <- data[!is.na(data$steps), ]
@@ -127,17 +149,132 @@ y$x
 ```
 
 ```r
-qplot(Group.1, data = y, weight = x, geom = "histogram", ylab = "mean", xlab = "intervals")
+plot(y$x ~ y$Group.1, type = "l", ylab = "mean", xlab = "intervals")
+```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
+
+
+### interval with maximum number of steps:
+
+
+```r
+y$Group.1[which(y$x == max(y$x))]
 ```
 
 ```
-## Warning: position_stack requires constant width: output may be incorrect
+## [1] 835
+## 288 Levels: 0 5 10 15 20 25 30 35 40 45 50 55 100 105 110 115 120 ... 2355
 ```
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
 
 ## Imputing missing values
 
+### number of missing rows: 
+
+
+```r
+length(data$steps[is.na(data$steps)])
+```
+
+```
+## [1] 2304
+```
+
+
+### fix data:
+
+remove all NAs and put mean number of steps instead
+
+
+```r
+data$steps[is.na(data$steps)] <- mean(data$steps, na.rm = TRUE)
+```
+
+
+### calculate mean and median again:
+
+### mean:
+
+
+```r
+y <- aggregate(data$steps, by = list(data$date), FUN = mean)
+y$x
+```
+
+```
+##  [1] 37.3826  0.4375 39.4167 42.0694 46.1597 53.5417 38.2465 37.3826
+##  [9] 44.4826 34.3750 35.7778 60.3542 43.1458 52.4236 35.2049 52.3750
+## [17] 46.7083 34.9167 41.0729 36.0938 30.6285 46.7361 30.9653 29.0104
+## [25]  8.6528 23.5347 35.1354 39.7847 17.4236 34.0938 53.5208 37.3826
+## [33] 36.8056 36.7049 37.3826 36.2465 28.9375 44.7326 11.1771 37.3826
+## [41] 37.3826 43.7778 37.3785 25.4722 37.3826  0.1424 18.8924 49.7882
+## [49] 52.4653 30.6979 15.5278 44.3993 70.9271 73.5903 50.2708 41.0903
+## [57] 38.7569 47.3819 35.3576 24.4688 37.3826
+```
+
+```r
+qplot(Group.1, data = y, weight = x, geom = "histogram", ylab = "mean", xlab = "date")
+```
+
+![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+
+
+### median:
+
+
+```r
+y <- aggregate(data$steps, by = list(data$date), FUN = median, na.action = na.omit)
+```
+
+```
+## Error: unused argument (na.action = function (object, ...) 
+## UseMethod("na.omit"))
+```
+
+```r
+y$x
+```
+
+```
+##  [1] 37.3826  0.4375 39.4167 42.0694 46.1597 53.5417 38.2465 37.3826
+##  [9] 44.4826 34.3750 35.7778 60.3542 43.1458 52.4236 35.2049 52.3750
+## [17] 46.7083 34.9167 41.0729 36.0938 30.6285 46.7361 30.9653 29.0104
+## [25]  8.6528 23.5347 35.1354 39.7847 17.4236 34.0938 53.5208 37.3826
+## [33] 36.8056 36.7049 37.3826 36.2465 28.9375 44.7326 11.1771 37.3826
+## [41] 37.3826 43.7778 37.3785 25.4722 37.3826  0.1424 18.8924 49.7882
+## [49] 52.4653 30.6979 15.5278 44.3993 70.9271 73.5903 50.2708 41.0903
+## [57] 38.7569 47.3819 35.3576 24.4688 37.3826
+```
+
+```r
+qplot(Group.1, data = y, weight = x, geom = "histogram", ylab = "median", xlab = "date")
+```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10.png) 
+
+
+Mean and median values slightly differ from original data set
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+TRUE = weekday, FALSE = weekend
+
+
+```r
+data3 <- data3[!is.na(data3$steps), ]
+y <- aggregate(data3$steps[data3$weekdays == TRUE], by = list(data3$intfact[data3$weekdays == 
+    TRUE]), FUN = mean)
+names(y) <- c("interval", "steps")
+z <- aggregate(data3$steps[data3$weekdays == FALSE], by = list(data3$intfact[data3$weekdays == 
+    FALSE]), FUN = mean)
+names(z) <- c("interval", "steps")
+y$weekdays <- TRUE
+z$weekdays <- FALSE
+w <- merge(y, z, all = TRUE)
+qplot(interval, steps, data = w, facets = weekdays ~ .)
+```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11.png) 
+

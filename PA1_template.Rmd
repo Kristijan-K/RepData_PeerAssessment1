@@ -2,34 +2,103 @@
 
 ```{r,echo=TRUE}
 require(ggplot2)
+require(timeDate)
 ```
 
 ## Loading and preprocessing the data
 ```{r}
 data<-read.csv('activity.csv')
 data$intfact <- as.factor(data$interval)
+data3<-data
+data3$date<-as.Date(strptime(data3$date,"%Y-%m-%d"))
+data3$weekdays<-isWeekday(data3$date,wday=1:5)
 ```
 
 
 ## What is mean total number of steps taken per day?
+
+### mean:
+
 ```{r,echo=TRUE}
 y<-aggregate(data$steps,by=list(data$date),FUN=mean)
 y$x
 qplot(Group.1,data=y,weight=x,geom="histogram",ylab="mean",xlab="date")
-y<-aggregate(data$steps,by=list(data$date),FUN=median,na.action=omit.na)
+```
+
+### median:
+
+```{r,echo=TRUE}
+y<-aggregate(data$steps,by=list(data$date),FUN=median,na.action=na.omit)
 y$x
 qplot(Group.1,data=y,weight=x,geom="histogram",ylab="median",xlab="date")
 ```
 
 ## What is the average daily activity pattern?
+
+### daily activity:
+
 ```{r,echo=TRUE}
 data2<-data[!is.na(data$steps),]
 y<-aggregate(data2$steps,by=list(data2$intfact),FUN=mean)
 y$x
-qplot(Group.1,data=y,weight=x,geom="histogram",ylab="mean",xlab="intervals")
+plot(y$x~y$Group.1,type="l",ylab="mean",xlab="intervals")
 ```
+
+### interval with maximum number of steps:
+
+```{r,echo=TRUE}
+y$Group.1[which(y$x == max(y$x))]
+```
+
 ## Imputing missing values
 
+### number of missing rows: 
+
+```{r,echo=TRUE}
+length(data$steps[is.na(data$steps)])
+```
+
+### fix data:
+
+remove all NAs and put mean number of steps instead
+
+```{r,echo=TRUE}
+data$steps[is.na(data$steps)]<- mean(data$steps,na.rm=TRUE)
+```
+
+### calculate mean and median again:
+
+### mean:
+
+```{r,echo=TRUE}
+y<-aggregate(data$steps,by=list(data$date),FUN=mean)
+y$x
+qplot(Group.1,data=y,weight=x,geom="histogram",ylab="mean",xlab="date")
+```
+
+### median:
+
+```{r,echo=TRUE}
+y<-aggregate(data$steps,by=list(data$date),FUN=median,na.action=na.omit)
+y$x
+qplot(Group.1,data=y,weight=x,geom="histogram",ylab="median",xlab="date")
+```
+
+Mean and median values slightly differ from original data set
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+TRUE = weekday, FALSE = weekend
+
+```{r,echo=TRUE}
+data3<-data3[!is.na(data3$steps),]
+y<-aggregate(data3$steps[data3$weekdays == TRUE],by=list(data3$intfact[data3$weekdays == TRUE]),FUN=mean)
+names(y)<-c("interval","steps")
+z<-aggregate(data3$steps[data3$weekdays == FALSE],by=list(data3$intfact[data3$weekdays == FALSE]),FUN=mean)
+names(z)<-c("interval","steps")
+y$weekdays<-TRUE
+z$weekdays<-FALSE
+w<-merge(y,z,all=TRUE)
+qplot(interval,steps,data=w,facets=weekdays~.)
+```
